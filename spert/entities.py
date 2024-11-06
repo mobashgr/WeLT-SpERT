@@ -1,5 +1,7 @@
-from collections import OrderedDict
+import collections
+from collections import OrderedDict, Counter
 from typing import List
+
 from torch.utils.data import Dataset as TorchDataset
 
 from spert import sampling
@@ -199,8 +201,6 @@ class Entity:
 
     def __str__(self):
         return self._phrase
-
-
 class Relation:
     def __init__(self, rid: int, relation_type: RelationType, head_entity: Entity,
                  tail_entity: Entity, reverse: bool = False):
@@ -353,6 +353,9 @@ class Dataset(TorchDataset):
         self._rid = 0
         self._eid = 0
         self._tid = 0
+        self.types=[]
+        self.typer=[]
+
 
     def iterate_documents(self, batch_size, order=None, truncate=False):
         return BatchIterator(self.documents, batch_size, order=order, truncate=truncate)
@@ -376,12 +379,14 @@ class Dataset(TorchDataset):
         mention = Entity(self._eid, entity_type, tokens, phrase)
         self._entities[self._eid] = mention
         self._eid += 1
+        self.types.append(entity_type._identifier)
         return mention
 
     def create_relation(self, relation_type, head_entity, tail_entity, reverse=False) -> Relation:
         relation = Relation(self._rid, relation_type, head_entity, tail_entity, reverse)
         self._relations[self._rid] = relation
         self._rid += 1
+        self.typer.append(relation_type._identifier)
         return relation
 
     def __len__(self):
@@ -415,6 +420,9 @@ class Dataset(TorchDataset):
     def entities(self):
         return list(self._entities.values())
 
+    def entity_types(self):
+        return self.types
+
     @property
     def relations(self):
         return list(self._relations.values())
@@ -428,5 +436,65 @@ class Dataset(TorchDataset):
         return len(self._entities)
 
     @property
+    def entity_types_count(self):
+        return len(self.types)
+
+    @property
+    def entity_list_distinct_types(self):
+        return Counter(self.types)
+
+    @property
+    def entity_list_distinct_types_values(self):
+        c=Counter(self.types)
+        return([*c])
+
+    @property
+    def entity_list_distinct_keys_values(self):
+        c = Counter(self.types)
+        return ([*c.values()])
+    @property
+    def entity_list_distinct_sum_values(self):
+         c = Counter(self.types)
+         return (sum(c.values()))
+
+    @property
+    def entites_frequency(self):
+        entities= list(self._entities)
+        frequency= Counter(entities)
+        return frequency
+
+    @property
+    def relation_types_count(self):
+        return len(self.typer)
+
+    @property
+    def relation_list_distinct_types(self):
+        return Counter(self.typer)
+
+    @property
+    def relation_list_distinct_types_values(self):
+        c = Counter(self.typer)
+        return ([*c])
+
+    @property
+    def relation_list_distinct_keys_values(self):
+        c = Counter(self.typer)
+        return ([*c.values()])
+
+    @property
+    def relation_list_distinct_sum_values(self):
+        c = Counter(self.typer)
+        return (sum(c.values()))
+
+    @property
     def relation_count(self):
         return len(self._relations)
+
+    @property
+    def relation_frequency(self):
+        relation = list(self._relations)
+        frequency = Counter(relation)
+        return frequency
+
+
+

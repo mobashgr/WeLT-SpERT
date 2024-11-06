@@ -2,7 +2,7 @@ import argparse
 import math
 import os
 from typing import Type
-
+import numpy as np
 import torch
 from torch.nn import DataParallel
 from torch.optim import Optimizer
@@ -77,10 +77,34 @@ class SpERTTrainer(BaseTrainer):
         # create scheduler
         scheduler = transformers.get_linear_schedule_with_warmup(optimizer,
                                                                  num_warmup_steps=args.lr_warmup * updates_total,
-                                                                 num_training_steps=updates_total)
-        # create loss function
-        rel_criterion = torch.nn.BCEWithLogitsLoss(reduction='none')
-        entity_criterion = torch.nn.CrossEntropyLoss(reduction='none')
+                                                               num_training_steps=updates_total)
+
+        '''WeLT-Loss functions'''
+        class_frequencies,class_ = self._log_datasets(input_reader)
+        totalr = sum(class_)
+        rescalledr = []
+        for e in class_:
+            rescalledr.append(1 - (e / totalr))
+        rescalledr = np.array(rescalledr)
+        print((rescalledr))
+        torchweightsr = torch.from_numpy(rescalledr).float().to('cuda')
+        rescaledweightsr = torch.softmax(torchweightsr, dim=0)
+        '''pos_weight RE'''
+        rel_criterion = torch.nn.BCEWithLogitsLoss(pos_weight=rescaledweightsr,reduction='none')
+        '''Weight RE'''
+        #rel_criterion = torch.nn.BCEWithLogitsLoss(weight=rescaledweightsr, reduction='none')
+
+
+        total = sum(class_frequencies)+args.neg_entity_count
+        rescalled = [1-(args.neg_entity_count/total)]
+        for e in class_frequencies:
+            rescalled.append(1 - (e / total))
+        rescalled = np.array(rescalled)
+        print(type(rescalled))
+        torchweights = torch.from_numpy(rescalled).float().to('cuda')
+        rescaledweights = torch.softmax(torchweights, dim=0)
+
+        entity_criterion = torch.nn.CrossEntropyLoss(weight=rescaledweights,reduction='none')
         compute_loss = SpERTLoss(rel_criterion, entity_criterion, model, optimizer, scheduler, args.max_grad_norm)
 
         # eval validation set
@@ -378,8 +402,17 @@ class SpERTTrainer(BaseTrainer):
             self._logger.info("Document count: %s" % d.document_count)
             self._logger.info("Relation count: %s" % d.relation_count)
             self._logger.info("Entity count: %s" % d.entity_count)
-            self._logger.info("entity_type_count:%s"% d.entity_type_count)
-            #self._logger.info("entities:%s"% d.entities)
+            self._logger.info("Entity_types_count:%s" % d.entity_types_count)
+            self._logger.info("Entity_list_distinct_types:%s" % d.entity_list_distinct_types)
+            self._logger.info("Entity_list_distinct_types_values:%s" % d.entity_list_distinct_types_values)
+            self._logger.info("Entity_list_distinct_keys_values:%s" % d.entity_list_distinct_keys_values)
+            self._logger.info("Entity_list_distinct_sum_values:%s" % d.entity_list_distinct_sum_values)
+            self._logger.info("Relation_types_count:%s" % d.relation_types_count)
+            self._logger.info("Relation_list_distinct_types:%s" % d.relation_list_distinct_types)
+            self._logger.info("Relation_list_distinct_types_values:%s" % d.relation_list_distinct_types_values)
+            self._logger.info("Relation_list_distinct_keys_values:%s" % d.relation_list_distinct_keys_values)
+            self._logger.info("Relation_list_distinct_sum_values:%s" % d.relation_list_distinct_sum_values)
+        return d.entity_list_distinct_keys_values,d.relation_list_distinct_keys_values
     def _init_train_logging(self, label):
         self._add_dataset_logging(label,
                                   data={'lr': ['lr', 'epoch', 'iteration', 'global_iteration'],
@@ -395,3 +428,4 @@ class SpERTTrainer(BaseTrainer):
                                                  'rel_nec_prec_micro', 'rel_nec_rec_micro', 'rel_nec_f1_micro',
                                                  'rel_nec_prec_macro', 'rel_nec_rec_macro', 'rel_nec_f1_macro',
                                                  'epoch', 'iteration', 'global_iteration']})
+
