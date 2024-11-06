@@ -7,7 +7,7 @@ Authors: Ghadeer Mobasher*, Olga Krebs, Wolfgang Müller, and Michael Gertz
 **Dependencies**
 Please make sure to install all required [dependencies](https://github.com/mobashgr/WeLT-SpERT/requirements.txt).
 
-## Data preparation
+## Data Preparation
 -Fetch Data :
  ```
 bash ./scripts/fetch_datasets.sh
@@ -19,12 +19,10 @@ python ./spert.py train --config configs/example_train.conf
 ```
 
  ## Citation
- TBD
-
+ The manuscript is in preparation (TBD)
 
 ## References
 Markus Eberts, Adrian Ulges. Span-based Joint Entity and Relation Extraction with Transformer Pre-training. 24th European Conference on Artificial Intelligence, 2020.
-
 
 ## Acknowledgment
 Ghadeer Mobasher* is part of the [PoLiMeR-ITN](http://polimer-itn.eu/) and is supported by the European Union’s Horizon 2020 research and innovation program under the Marie Skłodowska-Curie grant agreement PoLiMeR, No 812616.
