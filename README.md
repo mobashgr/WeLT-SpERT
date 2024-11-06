@@ -4,7 +4,7 @@ Authors: Ghadeer Mobasher*, Olga Krebs, Wolfgang Müller, and Michael Gertz
 ![WeLT-SpERT Architecture](SpERT-WeLT.png)
 
 ## Installation 
-Please make sure to install all required [dependencies](https://github.com/mobashgr/WeLT-SpERT/requirements.txt).
+Please make sure to install all required [dependencies](https://github.com/mobashgr/WeLT-SpERT/blob/main/requirements.txt).
 
 ## Data Preparation
 -Fetch Data :
