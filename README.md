@@ -4,7 +4,7 @@ Authors: Ghadeer Mobasher*, Olga Krebs, Wolfgang Müller, and Michael Gertz
 ![WeLT-SpERT Architecture](SpERT-WeLT.png)
 
 ## Installation 
-Please make sure to install all required [dependencies](https://github.com/mobashgr/WeLT-SpERT/blob/main/requirements.txt).
+Please make sure to install all the required [dependencies](https://github.com/mobashgr/WeLT-SpERT/blob/main/requirements.txt).
 
 ## Data Preparation
 -Fetch Data :
@@ -19,7 +19,6 @@ python ./spert.py train --config configs/example_train.conf
 
  ## Citation
  TBD
-
 
 ## References
 Markus Eberts, Adrian Ulges. Span-based Joint Entity and Relation Extraction with Transformer Pre-training. 24th European Conference on Artificial Intelligence, 2020.
