@@ -3,7 +3,7 @@ import argparse
 from args import train_argparser, eval_argparser, predict_argparser
 from config_reader import process_configs
 from spert import input_reader
-from spert.spert_trainer import SpERTTrainer
+from spert.WeLT_trainer import WeLTSpERTrainer
 
 
 def _train():
@@ -12,7 +12,7 @@ def _train():
 
 
 def __train(run_args):
-    trainer = SpERTTrainer(run_args)
+    trainer = WeLTSpERTrainer(run_args)
     trainer.train(train_path=run_args.train_path, valid_path=run_args.valid_path,
                   types_path=run_args.types_path, input_reader_cls=input_reader.JsonInputReader)
 
@@ -23,7 +23,7 @@ def _eval():
 
 
 def __eval(run_args):
-    trainer = SpERTTrainer(run_args)
+    trainer = WeLTSpERTrainer(run_args)
     trainer.eval(dataset_path=run_args.dataset_path, types_path=run_args.types_path,
                  input_reader_cls=input_reader.JsonInputReader)
 
@@ -34,7 +34,7 @@ def _predict():
 
 
 def __predict(run_args):
-    trainer = SpERTTrainer(run_args)
+    trainer = WeLTSpERTrainer(run_args)
     trainer.predict(dataset_path=run_args.dataset_path, types_path=run_args.types_path,
                     input_reader_cls=input_reader.JsonPredictionInputReader)
 

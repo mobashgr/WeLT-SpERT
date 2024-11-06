@@ -24,8 +24,8 @@ from spert.trainer import BaseTrainer
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
-class SpERTTrainer(BaseTrainer):
-    """ Joint entity and relation extraction training and evaluation """
+class WeLTSpERTrainer(BaseTrainer):
+    """ WeLT Joint entity and relation extraction training and evaluation  """
 
     def __init__(self, args: argparse.Namespace):
         super().__init__(args)
@@ -63,12 +63,6 @@ class SpERTTrainer(BaseTrainer):
         # load model
         model = self._load_model(input_reader)
 
-        # SpERT is currently optimized on a single GPU and not thoroughly tested in a multi GPU setup
-        # If you still want to train SpERT on multiple GPUs, uncomment the following lines
-        # # parallelize model
-        # if self._device.type != 'cpu':
-        #     model = torch.nn.DataParallel(model)
-
         model.to(self._device)
 
         # create optimizer
@@ -80,14 +74,14 @@ class SpERTTrainer(BaseTrainer):
                                                                num_training_steps=updates_total)
 
         '''WeLT-Loss functions'''
-        class_frequencies,class_ = self._log_datasets(input_reader)
-        totalr = sum(class_)
-        rescalledr = []
-        for e in class_:
-            rescalledr.append(1 - (e / totalr))
-        rescalledr = np.array(rescalledr)
-        print((rescalledr))
-        torchweightsr = torch.from_numpy(rescalledr).float().to('cuda')
+        entity_classes, relation_classes = self._log_datasets(input_reader)
+        totalrel = sum(relation_classes)+args.neg_relation_count
+        rescalledrel = []
+        for r in relation_classes:
+            rescalledrel.append(1 - (r / totalrel))
+        rescalledrel = np.array(rescalledrel)
+        print((rescalledrel))
+        torchweightsr = torch.from_numpy(rescalledrel).float().to('cuda')
         rescaledweightsr = torch.softmax(torchweightsr, dim=0)
         '''pos_weight RE'''
         rel_criterion = torch.nn.BCEWithLogitsLoss(pos_weight=rescaledweightsr,reduction='none')
@@ -95,15 +89,15 @@ class SpERTTrainer(BaseTrainer):
         #rel_criterion = torch.nn.BCEWithLogitsLoss(weight=rescaledweightsr, reduction='none')
 
 
-        total = sum(class_frequencies)+args.neg_entity_count
+        total = sum(entity_classes)+args.neg_entity_count
         rescalled = [1-(args.neg_entity_count/total)]
-        for e in class_frequencies:
+        for e in entity_classes:
             rescalled.append(1 - (e / total))
         rescalled = np.array(rescalled)
         print(type(rescalled))
         torchweights = torch.from_numpy(rescalled).float().to('cuda')
         rescaledweights = torch.softmax(torchweights, dim=0)
-
+        '''Weight NRE'''
         entity_criterion = torch.nn.CrossEntropyLoss(weight=rescaledweights,reduction='none')
         compute_loss = SpERTLoss(rel_criterion, entity_criterion, model, optimizer, scheduler, args.max_grad_norm)
 
